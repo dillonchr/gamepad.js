@@ -1,12 +1,16 @@
 {
-  "name": "gamepad.js",
-  "description": "Simple customizable event binding for the HTML Gamepad API.",
-  "version": "0.0.5-alpha",
-  "main": "gamepad.js",
+  "name": "joy.js",
+  "description": "fixing the gamepad api",
+  "author": "@dillonchr",
+  "repo": "dillonchr/joy.js",
+  "version": "1.0.0",
+  "main": "joy.js",
   "devDependencies": {
-    "jslint": "0.10.3"
+    "eslint": "^4.11.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0"
   },
   "scripts": {
-    "test": "jslint gamepad.js"
+    "test": "eslint joy.js"
   }
 }
