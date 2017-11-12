@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+    <title>joy.js</title>
+    <style type="text/css">
+        body {
+            background: black;
+            margin: 0;
+        }
+
+        #box {
+            background: blue;
+            height: 30px;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 30px;
+        }
+    </style>
+    <script type="text/javascript">
+        const states = [];
+        const listeners = {};
+
+        window.addEventListener('gamepadconnected', e => {
+            const j = e.gamepad;
+            console.log('Gotta controller', j);
+            connectGamepad(j);
+        });
+
+        function connectGamepad(j) {
+            states[j.index] = {
+                buttons: Array.from(j.buttons).fill(false),
+                direction: {
+                    up: false,
+                    down: false,
+                    left: false,
+                    right: false
+                }
+            };
+        }
+
+        function checkButtons() {
+            const gamepads = (Array.from(navigator.getGamepads()) || []).filter(g => !!g);
+            if (gamepads && gamepads.length) {
+                const j = gamepads.shift();
+                if (!states[j.index]) {
+                    connectGamepad(j);
+                }
+                const state = states[j.index];
+                Array.from(j.buttons)
+                    .forEach((b, i) => {
+                        if (state.buttons[i] !== b.pressed) {
+                            state.buttons[i] = b.pressed;
+                            fireButtonEvent(i, b.pressed);
+                        }
+                    });
+                const [x, y] = j.axes;
+                const isUp = y === -1;
+                const isDown = y === 1;
+                const isLeft = x === -1;
+                const isRight = x === 1;
+                if (state.direction.up !== isUp) {
+                    state.direction.up = isUp;
+                    
+                }
+                fireButtonEvent('up', isUp);
+                if (state.direction.down !== isDown) {
+                    state.direction.down = isDown;
+                }
+                    fireButtonEvent('down', isDown);
+                if (state.direction.left !== isLeft) {
+                    state.direction.left = isLeft;
+                }
+                    fireButtonEvent('left', isLeft);
+                if (state.direction.right !== isRight) {
+                    state.direction.right = isRight;
+                }
+                    fireButtonEvent('right', isRight);
+            }
+            requestAnimationFrame(checkButtons);
+        }
+
+        function addButtonListener(button, callback) {
+            if (!listeners[button]) {
+                listeners[button] = [];
+            }
+            listeners[button].push(callback);
+        }
+
+        function fireButtonEvent(button, value) {
+            const l = listeners[button] || [];
+            l.forEach(cb => cb(value));
+        }
+
+        checkButtons();
+
+        setTimeout(() => {
+            const box = document.getElementById('box');
+            let top = 0;
+            let left = 0;
+            addButtonListener('up', down => {
+                if (down) {
+                    top -= 3;
+                    box.style.top = top + 'px';
+                }
+            });
+            addButtonListener('down', down => {
+                if (down) {
+                    top += 3;
+                    box.style.top = top + 'px';
+                }
+            });
+            addButtonListener('left', down => {
+                if (down) {
+                    left -= 3;
+                    box.style.left = left + 'px';
+                }
+            });
+            addButtonListener('right', down => {
+                if (down) {
+                    left += 3;
+                    box.style.left = left + 'px';
+                }
+            });
+            addButtonListener('0', down => {
+                if (down) {
+                    box.style.background = 'blue';
+                }
+            });
+            addButtonListener('1', down => {
+                if (down) {
+                    box.style.background = 'red';
+                }
+            });
+            addButtonListener('2', down => {
+                if (down) {
+                    box.style.background = 'yellow';
+                }
+            });
+            addButtonListener('3', down => {
+                if (down) {
+                    box.style.background = 'green';
+                }
+            });
+        }, 100);
+    </script>
+</head>
+<body>
+    <div id="box"></div>
+</body>
+</html>
