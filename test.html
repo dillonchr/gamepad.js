@@ -18,6 +18,10 @@
         }
     </style>
     <script type="text/javascript">
+        const maxX = window.innerWidth - 30;
+        const maxY = window.innerHeight - 30;
+        const stepX = window.innerWidth / 70;
+        const stepY = window.innerHeight / 70;
         const states = [];
         const listeners = {};
 
@@ -55,27 +59,10 @@
                         }
                     });
                 const [x, y] = j.axes;
-                const isUp = y === -1;
-                const isDown = y === 1;
-                const isLeft = x === -1;
-                const isRight = x === 1;
-                if (state.direction.up !== isUp) {
-                    state.direction.up = isUp;
-                    
-                }
-                fireButtonEvent('up', isUp);
-                if (state.direction.down !== isDown) {
-                    state.direction.down = isDown;
-                }
-                    fireButtonEvent('down', isDown);
-                if (state.direction.left !== isLeft) {
-                    state.direction.left = isLeft;
-                }
-                    fireButtonEvent('left', isLeft);
-                if (state.direction.right !== isRight) {
-                    state.direction.right = isRight;
-                }
-                    fireButtonEvent('right', isRight);
+                y === -1 && fireButtonEvent('up', true);
+                y === 1 && fireButtonEvent('down', true);
+                x === -1 && fireButtonEvent('left', true);
+                x === 1 && fireButtonEvent('right', true);
             }
             requestAnimationFrame(checkButtons);
         }
@@ -98,29 +85,37 @@
             const box = document.getElementById('box');
             let top = 0;
             let left = 0;
-            addButtonListener('up', down => {
-                if (down) {
-                    top -= 3;
-                    box.style.top = top + 'px';
+            addButtonListener('up', () => {
+                if (top - stepY < 0) {
+                   top = maxY;
+                } else {
+                    top -= stepY;
                 }
+                box.style.top = top + 'px';
             });
-            addButtonListener('down', down => {
-                if (down) {
-                    top += 3;
-                    box.style.top = top + 'px';
+            addButtonListener('down', () => {
+                if (top + stepY > maxY) {
+                    top = 0;
+                } else {
+                    top += stepY;
                 }
+                box.style.top = top + 'px';
             });
-            addButtonListener('left', down => {
-                if (down) {
-                    left -= 3;
-                    box.style.left = left + 'px';
+            addButtonListener('left', () => {
+                if (left - stepX < 0) {
+                    left = maxX;
+                } else {
+                    left -= stepX;
                 }
+                box.style.left = left + 'px';
             });
-            addButtonListener('right', down => {
-                if (down) {
-                    left += 3;
-                    box.style.left = left + 'px';
+            addButtonListener('right', () => {
+                if (left + stepX > maxX) {
+                    left = 0;
+                } else {
+                    left += stepX;
                 }
+                box.style.left = left + 'px';
             });
             addButtonListener('0', down => {
                 if (down) {
