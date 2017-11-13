@@ -58,7 +58,7 @@
             let left = 0;
 
             observable
-                .filter(e => e.hasOwnProperty('up'))
+                .filter(e => e.hasOwnProperty('up') && Object.values(e).some(v => v))
                 .subscribe(dpad => {
                     if (dpad.up || dpad.down) {
                         const next = top + (dpad.up ? -1 : 1) * step;
@@ -85,7 +85,9 @@
                 });
             observable
                 .filter(b => b.index <= 3 && b.pressed)
-                .subscribe(b => box.style.background = b.index === 0 ? 'blue' : b.index === 1 ? 'red' : b.index === 2 ? 'yellow' : 'green');
+                .subscribe(b => {
+                    box.style.background = b.index === 0 ? 'blue' : b.index === 1 ? 'red' : b.index === 2 ? 'yellow' : 'green'
+                });
         }, 100);
     </script>
 </head>
