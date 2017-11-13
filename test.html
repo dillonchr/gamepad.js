@@ -17,126 +17,75 @@
             width: 30px;
         }
     </style>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.2/Rx.min.js"></script>
     <script type="text/javascript">
         const maxX = window.innerWidth - 30;
         const maxY = window.innerHeight - 30;
-        const stepX = window.innerWidth / 70;
-        const stepY = window.innerHeight / 70;
-        const states = [];
-        const listeners = {};
+        const step = (maxX > maxY ? window.innerWidth : window.innerHeight) / 70;
+        const observable = Rx.Observable.create(ob => {
+            function checkButtons() {
+                (Array.from(navigator.getGamepads()) || [])
+                    .filter(g => !!g)
+                    .forEach(j => {
+                        Array.from(j.buttons)
+                            .map((b, i) => ({
+                                pressed: b.pressed,
+                                value: b.value,
+                                index: i
+                            }))
+                            .forEach(ob.next.bind(ob));
+                        const [x, y] = j.axes;
+                        ob.next({
+                            up: y === -1,
+                            down: y === 1,
+                            left: x === -1,
+                            right: x === 1
+                        });
+                        requestAnimationFrame(checkButtons);
+                    });
+            }
+            checkButtons();
+        });
 
         window.addEventListener('gamepadconnected', e => {
             const j = e.gamepad;
             console.log('Gotta controller', j);
-            connectGamepad(j);
         });
-
-        function connectGamepad(j) {
-            states[j.index] = {
-                buttons: Array.from(j.buttons).fill(false),
-                direction: {
-                    up: false,
-                    down: false,
-                    left: false,
-                    right: false
-                }
-            };
-        }
-
-        function checkButtons() {
-            const gamepads = (Array.from(navigator.getGamepads()) || []).filter(g => !!g);
-            if (gamepads && gamepads.length) {
-                const j = gamepads.shift();
-                if (!states[j.index]) {
-                    connectGamepad(j);
-                }
-                const state = states[j.index];
-                Array.from(j.buttons)
-                    .forEach((b, i) => {
-                        if (state.buttons[i] !== b.pressed) {
-                            state.buttons[i] = b.pressed;
-                            fireButtonEvent(i, b.pressed);
-                        }
-                    });
-                const [x, y] = j.axes;
-                y === -1 && fireButtonEvent('up', true);
-                y === 1 && fireButtonEvent('down', true);
-                x === -1 && fireButtonEvent('left', true);
-                x === 1 && fireButtonEvent('right', true);
-            }
-            requestAnimationFrame(checkButtons);
-        }
-
-        function addButtonListener(button, callback) {
-            if (!listeners[button]) {
-                listeners[button] = [];
-            }
-            listeners[button].push(callback);
-        }
-
-        function fireButtonEvent(button, value) {
-            const l = listeners[button] || [];
-            l.forEach(cb => cb(value));
-        }
-
-        checkButtons();
 
         setTimeout(() => {
             const box = document.getElementById('box');
             let top = 0;
             let left = 0;
-            addButtonListener('up', () => {
-                if (top - stepY < 0) {
-                   top = maxY;
-                } else {
-                    top -= stepY;
-                }
-                box.style.top = top + 'px';
-            });
-            addButtonListener('down', () => {
-                if (top + stepY > maxY) {
-                    top = 0;
-                } else {
-                    top += stepY;
-                }
-                box.style.top = top + 'px';
-            });
-            addButtonListener('left', () => {
-                if (left - stepX < 0) {
-                    left = maxX;
-                } else {
-                    left -= stepX;
-                }
-                box.style.left = left + 'px';
-            });
-            addButtonListener('right', () => {
-                if (left + stepX > maxX) {
-                    left = 0;
-                } else {
-                    left += stepX;
-                }
-                box.style.left = left + 'px';
-            });
-            addButtonListener('0', down => {
-                if (down) {
-                    box.style.background = 'blue';
-                }
-            });
-            addButtonListener('1', down => {
-                if (down) {
-                    box.style.background = 'red';
-                }
-            });
-            addButtonListener('2', down => {
-                if (down) {
-                    box.style.background = 'yellow';
-                }
-            });
-            addButtonListener('3', down => {
-                if (down) {
-                    box.style.background = 'green';
-                }
-            });
+
+            observable
+                .filter(e => e.hasOwnProperty('up'))
+                .subscribe(dpad => {
+                    if (dpad.up || dpad.down) {
+                        const next = top + (dpad.up ? -1 : 1) * step;
+                        if (next < 0) {
+                            top = maxY;
+                        } else if (next > maxY) {
+                            top = 0;
+                        } else {
+                            top = next;
+                        }
+                        box.style.top = top + 'px';
+                    }
+                    if (dpad.left || dpad.right) {
+                        const next = left + (dpad.left ? -1 : 1) * step;
+                        if (next < 0) {
+                            left = maxX;
+                        } else if (next > maxX) {
+                            left = 0;
+                        } else {
+                            left = next;
+                        }
+                        box.style.left = left + 'px';
+                    }
+                });
+            observable
+                .filter(b => b.index <= 3 && b.pressed)
+                .subscribe(b => box.style.background = b.index === 0 ? 'blue' : b.index === 1 ? 'red' : b.index === 2 ? 'yellow' : 'green');
         }, 100);
     </script>
 </head>
